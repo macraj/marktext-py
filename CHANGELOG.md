@@ -1,3 +1,9 @@
+## v0.2.4 (2026-04-09)
+
+### Bug Fixes
+
+- replace ui.upload with native JS file picker for Open
+
 ## v0.2.3 (2026-04-09)
 
 ### Bug Fixes
