@@ -85,10 +85,15 @@ def index():
 
     # Unique key for this page session — used to route JS file picks back here.
     session_key = str(id(state))
+    # Holds open dialog ref so the pending-file timer can close it.
+    open_dialog_ref: list = []
 
     def action_open() -> None:
         """Open via native OS file picker (JS) or manual path input."""
         with ui.dialog() as dlg, ui.card().classes('w-96'):
+            open_dialog_ref.clear()
+            open_dialog_ref.append(dlg)
+
             ui.label('Open File').classes('text-lg font-semibold mb-2')
 
             # Pure HTML label+input — click stays in JS, no Python round-trip,
@@ -120,8 +125,12 @@ def index():
                 placeholder='/Users/you/notes.md',
             ).classes('w-full')
 
+            def _close():
+                open_dialog_ref.clear()
+                dlg.close()
+
             with ui.row().classes('justify-end gap-2 mt-4'):
-                ui.button('Cancel', on_click=dlg.close).props('flat')
+                ui.button('Cancel', on_click=_close).props('flat')
 
                 def do_open_path():
                     p = os.path.expanduser(path_input.value.strip())
@@ -129,7 +138,7 @@ def index():
                         content = read_file(p)
                         _load_content(content, path=p)
                         save_last_folder(p)
-                        dlg.close()
+                        _close()
                         ui.notify(f'Opened: {p.split("/")[-1]}', color='positive')
                     except Exception as exc:
                         ui.notify(f'Could not open: {exc}', color='negative')
@@ -453,6 +462,9 @@ def index():
     def _check_pending_file():
         if session_key in _pending_files:
             file_data = _pending_files.pop(session_key)
+            if open_dialog_ref:
+                open_dialog_ref[0].close()
+                open_dialog_ref.clear()
             _load_content(file_data['content'])
             ui.notify(f'Opened: {file_data["name"]}', color='positive')
 
