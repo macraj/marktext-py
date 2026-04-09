@@ -1,0 +1,36 @@
+[project]
+name = "marktext-py"
+version = "0.1.0"
+description = "MarkText-inspired markdown editor built with NiceGUI"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "markdown-it-py>=4.0.0",
+    "mdit-py-plugins>=0.5.0",
+    "nicegui>=3.10.0",
+    "pygments>=2.20.0",
+    "weasyprint>=68.1",
+]
+
+[dependency-groups]
+dev = [
+    "commitizen>=4.13.9",
+]
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "v$version"
+version_scheme = "semver"
+version_provider = "pep621"
+update_changelog_on_bump = true
+major_version_zero = true  # 0.x.y — breaking changes don't force v1
+
+[tool.commitizen.change_type_map]
+feat = "Features"
+fix = "Bug Fixes"
+refactor = "Refactoring"
+perf = "Performance"
+docs = "Documentation"
+style = "Style"
+test = "Tests"
+chore = "Chores"
