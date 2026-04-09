@@ -69,6 +69,9 @@ def index():
             _load_content(INITIAL_CONTENT)
 
     def action_open() -> None:
+        # Stash for upload-picked file so we can load after dialog closes
+        upload_stash: dict = {}
+
         with ui.dialog() as dlg, ui.card().classes('w-96'):
             ui.label('Open File').classes('text-lg font-semibold mb-2')
 
@@ -78,13 +81,14 @@ def index():
                 placeholder='/Users/you/document.md',
             ).classes('w-full')
 
-            ui.label('— or pick a file from your computer —').classes('text-xs text-gray-500 my-2 text-center w-full')
+            ui.label('— or pick a file —').classes('text-xs text-gray-500 my-1 text-center w-full')
+
+            upload_label = ui.label('').classes('text-xs text-green-400 text-center w-full')
 
             def on_upload(e):
-                content = e.content.read().decode('utf-8')
-                _load_content(content, path=None)
-                dlg.close()
-                ui.notify(f'Opened: {e.name}', color='positive')
+                upload_stash['content'] = e.content.read().decode('utf-8')
+                upload_stash['name'] = e.name
+                upload_label.set_text(f'✓ {e.name} ready — click Open')
 
             ui.upload(on_upload=on_upload, multiple=False, auto_upload=True) \
                 .props('accept=".md,.txt" flat dense label="Browse…"').classes('w-full')
@@ -93,15 +97,23 @@ def index():
                 ui.button('Cancel', on_click=dlg.close).props('flat')
 
                 def do_open():
-                    p = os.path.expanduser(path_input.value.strip())
-                    try:
-                        content = read_file(p)
-                        _load_content(content, path=p)
-                        save_last_folder(p)
+                    # Prefer uploaded file if present, otherwise use path input
+                    if upload_stash.get('content') is not None:
+                        content = upload_stash['content']
+                        name = upload_stash['name']
                         dlg.close()
-                        ui.notify(f'Opened: {p.split("/")[-1]}', color='positive')
-                    except Exception as exc:
-                        ui.notify(f'Could not open: {exc}', color='negative')
+                        _load_content(content, path=None)
+                        ui.notify(f'Opened: {name}', color='positive')
+                    else:
+                        p = os.path.expanduser(path_input.value.strip())
+                        try:
+                            content = read_file(p)
+                            _load_content(content, path=p)
+                            save_last_folder(p)
+                            dlg.close()
+                            ui.notify(f'Opened: {p.split("/")[-1]}', color='positive')
+                        except Exception as exc:
+                            ui.notify(f'Could not open: {exc}', color='negative')
 
                 ui.button('Open', on_click=do_open).props('color=primary')
 
