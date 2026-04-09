@@ -30,24 +30,6 @@ window.cmPrefix = function (prefix) {
     view.focus();
 };
 
-// Native OS file picker — reads file client-side, POSTs to /api/open-file.
-window.openFilePicker = function (sessionKey) {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.md,.txt,.markdown';
-    input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const content = await file.text();
-        await fetch('/api/open-file', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ session_key: sessionKey, name: file.name, content: content }),
-        });
-    };
-    input.click();
-};
-
 // Clipboard image paste.
 function setupImagePaste() {
     document.addEventListener('paste', async (e) => {

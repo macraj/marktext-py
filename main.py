@@ -91,11 +91,26 @@ def index():
         with ui.dialog() as dlg, ui.card().classes('w-96'):
             ui.label('Open File').classes('text-lg font-semibold mb-2')
 
-            ui.button('Browse files…', icon='folder_open',
-                on_click=lambda: ui.run_javascript(
-                    f'window.openFilePicker({session_key!r})'
-                )
-            ).props('color=primary').classes('w-full')
+            # Pure HTML label+input — click stays in JS, no Python round-trip,
+            # so the browser's user-gesture requirement is satisfied.
+            ui.html(f'''
+<label style="display:flex;align-items:center;gap:8px;cursor:pointer;
+              padding:8px 16px;border-radius:4px;background:#1976d2;
+              color:white;font-size:14px;width:100%;box-sizing:border-box;justify-content:center;">
+  <span class="material-icons" style="font-size:18px">folder_open</span>
+  Browse files…
+  <input type="file" accept=".md,.txt,.markdown" style="display:none"
+    onchange="(async function(e){{
+      const file = e.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      await fetch('/api/open-file', {{
+        method:'POST',
+        headers:{{'Content-Type':'application/json'}},
+        body: JSON.stringify({{session_key:{session_key!r}, name:file.name, content:text}})
+      }});
+    }})(event)">
+</label>''')
 
             ui.label('— or type the full path —').classes(
                 'text-xs text-gray-500 my-2 text-center w-full')
