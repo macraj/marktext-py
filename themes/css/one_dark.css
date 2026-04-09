@@ -1,0 +1,20 @@
+/* MarkText-Py — One Dark theme */
+:root {
+    --bg: #282c34;
+    --surface: #21252b;
+    --border: #3e4451;
+    --text: #abb2bf;
+    --text-dim: #636d83;
+    --accent: #61afef;
+    --code-bg: #2c313a;
+    --code-fg: #e5c07b;
+    --heading: #e6efff;
+    --blockquote-border: #4b5263;
+    --blockquote-bg: #21252b;
+    --table-even: #2c313a;
+    --th-bg: #21252b;
+    --hr: #3e4451;
+    --editor-bg: #282c34;
+    --editor-fg: #abb2bf;
+    --cm-theme: one-dark;
+}

@@ -1,0 +1,20 @@
+/* MarkText-Py — Ulysses Light theme */
+:root {
+    --bg: #fdf6e3;
+    --surface: #eee8d5;
+    --border: #d8cdb0;
+    --text: #657b83;
+    --text-dim: #93a1a1;
+    --accent: #268bd2;
+    --code-bg: #eee8d5;
+    --code-fg: #cb4b16;
+    --heading: #586e75;
+    --blockquote-border: #93a1a1;
+    --blockquote-bg: #eee8d5;
+    --table-even: #f4efe0;
+    --th-bg: #eee8d5;
+    --hr: #d8cdb0;
+    --editor-bg: #fdf6e3;
+    --editor-fg: #657b83;
+    --cm-theme: default;
+}

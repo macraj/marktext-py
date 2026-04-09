@@ -1,0 +1,20 @@
+/* MarkText-Py — Cadmium Light theme */
+:root {
+    --bg: #ffffff;
+    --surface: #f5f5f5;
+    --border: #e0e0e0;
+    --text: #24292e;
+    --text-dim: #6a737d;
+    --accent: #0366d6;
+    --code-bg: #f6f8fa;
+    --code-fg: #e36209;
+    --heading: #1a1a1a;
+    --blockquote-border: #dfe2e5;
+    --blockquote-bg: #fafafa;
+    --table-even: #f6f8fa;
+    --th-bg: #f0f0f0;
+    --hr: #e1e4e8;
+    --editor-bg: #ffffff;
+    --editor-fg: #24292e;
+    --cm-theme: default;
+}

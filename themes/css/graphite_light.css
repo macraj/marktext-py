@@ -1,0 +1,20 @@
+/* MarkText-Py — Graphite Light theme */
+:root {
+    --bg: #f4f4f4;
+    --surface: #ebebeb;
+    --border: #d0d0d0;
+    --text: #3c3c3c;
+    --text-dim: #888;
+    --accent: #555;
+    --code-bg: #e8e8e8;
+    --code-fg: #c0392b;
+    --heading: #222;
+    --blockquote-border: #aaa;
+    --blockquote-bg: #ececec;
+    --table-even: #ebebeb;
+    --th-bg: #ddd;
+    --hr: #ccc;
+    --editor-bg: #f4f4f4;
+    --editor-fg: #3c3c3c;
+    --cm-theme: default;
+}
