@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from nicegui import app, ui
 
@@ -157,7 +158,6 @@ def index():
                 ui.button('Cancel', on_click=dlg.close).props('flat')
 
                 def do_export():
-                    import os
                     dest = os.path.expanduser(path_input.value.strip())
                     content = state['content']
                     rendered_html = render_md(content)
