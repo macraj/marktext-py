@@ -728,7 +728,7 @@ wheels = [
 
 [[package]]
 name = "marktext-py"
-version = "0.2.4"
+version = "0.2.5"
 source = { virtual = "." }
 dependencies = [
     { name = "markdown-it-py" },

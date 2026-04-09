@@ -1,3 +1,9 @@
+## v0.2.6 (2026-04-09)
+
+### Bug Fixes
+
+- close Open dialog automatically after file picked via Browse
+
 ## v0.2.5 (2026-04-09)
 
 ### Bug Fixes
