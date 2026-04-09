@@ -55,8 +55,10 @@ def index():
     def _set_title(path: str | None, dirty: bool = False) -> None:
         name = path.split('/')[-1] if path else 'Untitled'
         marker = ' •' if dirty else ''
+        full_title = f'MarkText-Py — {name}{marker}'
         if title_label_ref:
-            title_label_ref[0].set_text(f'MarkText-Py — {name}{marker}')
+            title_label_ref[0].set_text(full_title)
+        ui.run_javascript(f'document.title = {full_title!r}')
 
     def _load_content(content: str, path: str | None = None) -> None:
         state['path'] = path

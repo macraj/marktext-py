@@ -34,7 +34,7 @@ import json, sys
 from pathlib import Path
 from weasyprint import HTML, CSS
 
-args = json.loads(sys.argv[1])
+args = json.loads(sys.stdin.read())
 page_css = f'@page {{ size: {args["page_size"]}; margin: 2.5cm 2cm; }}'
 pdf_bytes = HTML(string=args["html"]).write_pdf(
     stylesheets=[CSS(string=page_css)]
@@ -61,18 +61,19 @@ def export_pdf(
     html_str = export_html(markdown_html, title=title, dark=dark)
 
     if _needs_brew_env():
-        args = json.dumps({
+        payload = json.dumps({
             'html': html_str,
             'page_size': page_size,
             'dest_path': dest_path,
         })
         env = {**os.environ, 'DYLD_LIBRARY_PATH': '/opt/homebrew/lib'}
         result = subprocess.run(
-            [sys.executable, '-c', _SUBPROCESS_SCRIPT, args],
+            [sys.executable, '-c', _SUBPROCESS_SCRIPT],
+            input=payload, text=True,
             env=env, capture_output=True,
         )
         if result.returncode != 0:
-            raise RuntimeError(result.stderr.decode())
+            raise RuntimeError(result.stderr)
         pdf_bytes = Path(dest_path).read_bytes() if dest_path else result.stdout
     else:
         from weasyprint import HTML, CSS
