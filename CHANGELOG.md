@@ -1,3 +1,9 @@
+## v0.2.2 (2026-04-09)
+
+### Bug Fixes
+
+- replace broken hidden-upload open button with proper dialog
+
 ## v0.2.1 (2026-04-09)
 
 ### Bug Fixes
