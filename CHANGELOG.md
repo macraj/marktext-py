@@ -1,3 +1,9 @@
+## v0.2.3 (2026-04-09)
+
+### Bug Fixes
+
+- open via upload now works — defer load until Open button click
+
 ## v0.2.2 (2026-04-09)
 
 ### Bug Fixes
