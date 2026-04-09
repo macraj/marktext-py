@@ -68,12 +68,44 @@ def index():
         else:
             _load_content(INITIAL_CONTENT)
 
-    def action_open_upload(e) -> None:
-        """Called when a file is selected via the hidden upload widget."""
-        content = e.content.read().decode('utf-8')
-        # e.name is the filename; we don't have the full path from browser upload
-        _load_content(content, path=None)
-        ui.notify(f'Opened: {e.name}', color='positive')
+    def action_open() -> None:
+        with ui.dialog() as dlg, ui.card().classes('w-96'):
+            ui.label('Open File').classes('text-lg font-semibold mb-2')
+
+            path_input = ui.input(
+                label='File path',
+                value=load_last_folder() + '/',
+                placeholder='/Users/you/document.md',
+            ).classes('w-full')
+
+            ui.label('— or pick a file from your computer —').classes('text-xs text-gray-500 my-2 text-center w-full')
+
+            def on_upload(e):
+                content = e.content.read().decode('utf-8')
+                _load_content(content, path=None)
+                dlg.close()
+                ui.notify(f'Opened: {e.name}', color='positive')
+
+            ui.upload(on_upload=on_upload, multiple=False, auto_upload=True) \
+                .props('accept=".md,.txt" flat dense label="Browse…"').classes('w-full')
+
+            with ui.row().classes('justify-end gap-2 mt-4'):
+                ui.button('Cancel', on_click=dlg.close).props('flat')
+
+                def do_open():
+                    p = os.path.expanduser(path_input.value.strip())
+                    try:
+                        content = read_file(p)
+                        _load_content(content, path=p)
+                        save_last_folder(p)
+                        dlg.close()
+                        ui.notify(f'Opened: {p.split("/")[-1]}', color='positive')
+                    except Exception as exc:
+                        ui.notify(f'Could not open: {exc}', color='negative')
+
+                ui.button('Open', on_click=do_open).props('color=primary')
+
+        dlg.open()
 
     def action_save() -> None:
         if state['path']:
@@ -316,15 +348,8 @@ def index():
             ui.button('New', icon='add', on_click=action_new) \
                 .props('flat dense color=white').classes('text-xs')
 
-            # Open via browser file upload
-            with ui.element('div').classes('relative'):
-                open_btn = ui.button('Open', icon='folder_open') \
-                    .props('flat dense color=white').classes('text-xs')
-                upload = ui.upload(
-                    on_upload=action_open_upload,
-                    multiple=False,
-                    auto_upload=True,
-                ).props('accept=".md,.txt" flat dense').classes('absolute inset-0 opacity-0 cursor-pointer')
+            ui.button('Open', icon='folder_open', on_click=action_open) \
+                .props('flat dense color=white').classes('text-xs')
 
             ui.button('Save', icon='save', on_click=action_save) \
                 .props('flat dense color=white').classes('text-xs')
