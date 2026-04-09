@@ -1,6 +1,21 @@
 import os
 from pathlib import Path
 from nicegui import app, ui
+from fastapi import Request
+
+# Module-level store for files picked via JS native file picker.
+# Keyed by session_key (str(id(state)) per page load).
+_pending_files: dict[str, dict] = {}
+
+
+@app.post('/api/open-file')
+async def _api_open_file(request: Request):
+    data = await request.json()
+    _pending_files[data['session_key']] = {
+        'name': data['name'],
+        'content': data['content'],
+    }
+    return {'ok': True}
 
 app.add_static_files('/static', str(Path(__file__).parent / 'static'))
 from editor.markdown_editor import MarkdownEditor, INITIAL_CONTENT
@@ -68,54 +83,43 @@ def index():
         else:
             _load_content(INITIAL_CONTENT)
 
-    def action_open() -> None:
-        # Stash for upload-picked file so we can load after dialog closes
-        upload_stash: dict = {}
+    # Unique key for this page session — used to route JS file picks back here.
+    session_key = str(id(state))
 
+    def action_open() -> None:
+        """Open via native OS file picker (JS) or manual path input."""
         with ui.dialog() as dlg, ui.card().classes('w-96'):
             ui.label('Open File').classes('text-lg font-semibold mb-2')
 
+            ui.button('Browse files…', icon='folder_open',
+                on_click=lambda: ui.run_javascript(
+                    f'window.openFilePicker({session_key!r})'
+                )
+            ).props('color=primary').classes('w-full')
+
+            ui.label('— or type the full path —').classes(
+                'text-xs text-gray-500 my-2 text-center w-full')
+
             path_input = ui.input(
                 label='File path',
-                value=load_last_folder() + '/',
-                placeholder='/Users/you/document.md',
+                placeholder='/Users/you/notes.md',
             ).classes('w-full')
-
-            ui.label('— or pick a file —').classes('text-xs text-gray-500 my-1 text-center w-full')
-
-            upload_label = ui.label('').classes('text-xs text-green-400 text-center w-full')
-
-            def on_upload(e):
-                upload_stash['content'] = e.content.read().decode('utf-8')
-                upload_stash['name'] = e.name
-                upload_label.set_text(f'✓ {e.name} ready — click Open')
-
-            ui.upload(on_upload=on_upload, multiple=False, auto_upload=True) \
-                .props('accept=".md,.txt" flat dense label="Browse…"').classes('w-full')
 
             with ui.row().classes('justify-end gap-2 mt-4'):
                 ui.button('Cancel', on_click=dlg.close).props('flat')
 
-                def do_open():
-                    # Prefer uploaded file if present, otherwise use path input
-                    if upload_stash.get('content') is not None:
-                        content = upload_stash['content']
-                        name = upload_stash['name']
+                def do_open_path():
+                    p = os.path.expanduser(path_input.value.strip())
+                    try:
+                        content = read_file(p)
+                        _load_content(content, path=p)
+                        save_last_folder(p)
                         dlg.close()
-                        _load_content(content, path=None)
-                        ui.notify(f'Opened: {name}', color='positive')
-                    else:
-                        p = os.path.expanduser(path_input.value.strip())
-                        try:
-                            content = read_file(p)
-                            _load_content(content, path=p)
-                            save_last_folder(p)
-                            dlg.close()
-                            ui.notify(f'Opened: {p.split("/")[-1]}', color='positive')
-                        except Exception as exc:
-                            ui.notify(f'Could not open: {exc}', color='negative')
+                        ui.notify(f'Opened: {p.split("/")[-1]}', color='positive')
+                    except Exception as exc:
+                        ui.notify(f'Could not open: {exc}', color='negative')
 
-                ui.button('Open', on_click=do_open).props('color=primary')
+                ui.button('Open path', on_click=do_open_path).props('flat')
 
         dlg.open()
 
@@ -429,6 +433,15 @@ def index():
         _update_counts(e.value)
 
     editor.codemirror.on('change', on_content_change_full)
+
+    # Poll for files picked via native JS file picker
+    def _check_pending_file():
+        if session_key in _pending_files:
+            file_data = _pending_files.pop(session_key)
+            _load_content(file_data['content'])
+            ui.notify(f'Opened: {file_data["name"]}', color='positive')
+
+    ui.timer(0.3, _check_pending_file)
 
     # Initial render
     preview.update(INITIAL_CONTENT)
