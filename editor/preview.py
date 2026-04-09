@@ -77,6 +77,7 @@ _md_builder = (
     })
     .use(front_matter_plugin)
     .use(footnote_plugin)
+    .enable('table')
 )
 if _HAS_TASKLISTS:
     _md_builder = _md_builder.use(tasklists_plugin)
