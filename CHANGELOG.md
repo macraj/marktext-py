@@ -1,3 +1,10 @@
+## v0.3.0 (2026-04-10)
+
+### Bug Fixes
+
+- update browser tab title on file open, improve PDF export reliability, add install/run scripts
+- enable markdown table rendering and fix PDF export on macOS
+
 ## v0.2.7 (2026-04-09)
 
 ### Bug Fixes

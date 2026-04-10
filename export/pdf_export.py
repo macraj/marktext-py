@@ -1,10 +1,32 @@
 """Export markdown to PDF via weasyprint."""
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
 from export.html_export import export_html
+
+
+_OL_START_RE = re.compile(r'<ol\s+start=(["\'])(\d+)\1')
+
+
+def _fix_ol_start(html: str) -> str:
+    """Inject counter-reset so weasyprint honours <ol start="N">.
+
+    Weasyprint 68.x ignores the HTML `start` attribute on ordered lists,
+    so numbered lists that don't start at 1 render as 1, 2, 3, .... We
+    work around it by adding an inline counter-reset that sets the
+    `list-item` counter to N-1 before the first item.
+    """
+    def repl(m):
+        quote = m.group(1)
+        n = int(m.group(2))
+        return (
+            f'<ol start={quote}{n}{quote} '
+            f'style="counter-reset: list-item {n - 1}"'
+        )
+    return _OL_START_RE.sub(repl, html)
 
 
 PDF_EXTRA_CSS = """
@@ -58,7 +80,7 @@ def export_pdf(
 
     Also writes to dest_path if provided. Returns raw PDF bytes.
     """
-    html_str = export_html(markdown_html, title=title, dark=dark)
+    html_str = export_html(_fix_ol_start(markdown_html), title=title, dark=dark)
 
     if _needs_brew_env():
         payload = json.dumps({
