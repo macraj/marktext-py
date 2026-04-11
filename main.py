@@ -1,4 +1,6 @@
 import os
+import sys
+import signal
 from pathlib import Path
 from nicegui import app, ui
 from fastapi import Request
@@ -489,6 +491,12 @@ def index():
     preview.update(INITIAL_CONTENT)
     _update_counts(INITIAL_CONTENT)
 
+
+# Graceful shutdown on Ctrl+C
+def _handle_shutdown(signum, frame):
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, _handle_shutdown)
 
 ui.run(
     title='MarkText-Py',
