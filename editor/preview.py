@@ -115,7 +115,7 @@ PREVIEW_CSS = """
     font-size: 14px;
     line-height: 1.7;
     color: var(--text, #d4d4d4);
-    padding: 1.5rem 2rem 3rem 2rem;
+    padding: 1.5rem 3rem 3rem 3rem;
     max-width: 860px;
     margin: 0 auto;
     word-break: break-word;
