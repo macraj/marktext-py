@@ -503,5 +503,5 @@ ui.run(
     dark=True,
     port=8080,
     reload=False,
-    show=False,
+    show=True,
 )
