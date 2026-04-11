@@ -482,7 +482,7 @@ def index():
             if open_dialog_ref:
                 open_dialog_ref[0].close()
                 open_dialog_ref.clear()
-            _load_content(file_data['content'])
+            _load_content(file_data['content'], path=file_data['name'])
             ui.notify(f'Opened: {file_data["name"]}', color='positive')
 
     ui.timer(0.3, _check_pending_file)
