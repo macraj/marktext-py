@@ -161,7 +161,15 @@ PREVIEW_CSS = """
 .md-preview th { background: var(--th-bg, #2a2a2a); color: var(--heading, #e8e8e8); }
 .md-preview tr:nth-child(even) { background: var(--table-even, #1e1e1e); }
 .md-preview img { max-width: 100%; }
-.md-preview hr { display: block; border: none; border-top: 1px solid var(--hr,#444); margin: 3em 0 !important; }
+.md-preview hr {
+    display: block;
+    border: none;
+    height: 1px;
+    background: var(--hr, #444);
+    background-clip: content-box;
+    padding: 1.5em 0;
+    margin: 0;
+}
 .highlight { background: var(--pre-bg, #1e1e1e) !important; }
 /* Checkboxes from tasklist plugin */
 .md-preview input[type=checkbox] { margin-right: 0.4em; }
