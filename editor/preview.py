@@ -112,12 +112,14 @@ PREVIEW_CSS = """
 <style>
 .md-preview {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 16px;
+    font-size: 14px;
     line-height: 1.7;
     color: var(--text, #d4d4d4);
-    padding: 2rem 3rem;
+    padding: 1.5rem 2rem 3rem 2rem;
     max-width: 860px;
     margin: 0 auto;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 .md-preview h1, .md-preview h2, .md-preview h3,
 .md-preview h4, .md-preview h5, .md-preview h6 {
@@ -142,6 +144,7 @@ PREVIEW_CSS = """
     border-radius: 6px;
     padding: 1em;
     overflow-x: auto;
+    white-space: pre-wrap;
 }
 .md-preview pre code { background: none; padding: 0; color: inherit; }
 .md-preview blockquote {

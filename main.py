@@ -361,7 +361,7 @@ def index():
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
         .nicegui-content { height: 100vh; display: flex; flex-direction: column; padding: 0 !important; }
         .q-splitter { flex: 1; overflow: hidden; }
-        .q-splitter__panel { overflow: hidden; }
+        .q-splitter__panel { overflow: auto; }
     </style>
     """)
     # Inject initial theme CSS vars
@@ -461,14 +461,17 @@ def index():
         word_lbl.set_text(f'{words:,} words')
         char_lbl.set_text(f'{chars:,} chars')
 
-    def on_content_change_full(e) -> None:
-        state['content'] = e.value
-        if preview_ref:
-            preview_ref[0].update(e.value)
-        _mark_dirty()
-        _update_counts(e.value)
+    def _sync_preview():
+        """Polling sync: check if editor content changed and update preview."""
+        current = editor.codemirror.value
+        if current != state['content']:
+            state['content'] = current
+            if preview_ref:
+                preview_ref[0].update(current)
+            _mark_dirty()
+            _update_counts(current)
 
-    editor.codemirror.on('change', on_content_change_full)
+    ui.timer(0.3, _sync_preview)
 
     # Poll for files picked via native JS file picker
     def _check_pending_file():
