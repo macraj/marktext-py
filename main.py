@@ -362,7 +362,7 @@ def index():
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
         .nicegui-content { height: 100vh; display: flex; flex-direction: column; padding: 0 !important; }
-        .q-splitter { flex: 1; overflow: hidden; margin-bottom: 30px; }
+        .q-splitter { flex: 1; overflow: hidden; margin-bottom: 40px; }
         .q-splitter__panel { overflow: auto; }
     </style>
     """)
