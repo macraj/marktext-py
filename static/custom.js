@@ -59,12 +59,11 @@ function setupImagePaste() {
 
 document.addEventListener('DOMContentLoaded', () => {
     const poll = setInterval(() => {
-        // NiceGUI stores Vue component instances in mounted_app.elements.
-        // The CodeMirror component has an .editor property (EditorView).
-        if (typeof mounted_app === 'undefined' || !mounted_app.elements) return;
-        const cmComponent = Object.values(mounted_app.elements).find(e => e && e.editor);
-        if (cmComponent) {
-            window._cmView = cmComponent.editor;
+        // CodeMirror 6 sets cmView on .cm-content (not .cm-editor).
+        // cmView is the DocView (root ContentView), and .view is the EditorView.
+        const content = document.querySelector('.cm-content');
+        if (content && content.cmView && content.cmView.view) {
+            window._cmView = content.cmView.view;
             clearInterval(poll);
             setupImagePaste();
         }
