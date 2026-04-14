@@ -361,7 +361,7 @@ def index():
     ui.add_head_html("""
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
-        .nicegui-content { height: 100vh; display: flex; flex-direction: column; padding: 0 !important; }
+        .nicegui-content { height: 100vh; display: flex; flex-direction: column; padding-left: 0 !important; padding-right: 0 !important; }
         .q-splitter { flex: 1; overflow: hidden; }
         .q-splitter__panel { overflow: auto; }
     </style>
@@ -441,9 +441,8 @@ def index():
             preview = Preview()
             preview_ref.append(preview)
 
-    # Status bar — plain div so it sits in the flex column (not fixed-position
-    # like Quasar's q-footer, which would overlap the editor bottom).
-    with ui.element('div').classes('bg-gray-800 text-gray-400 px-4 py-1 text-xs flex-shrink-0 flex w-full items-center'):
+    # Status bar
+    with ui.footer().classes('bg-gray-800 text-gray-400 px-4 py-1 text-xs'):
         with ui.row().classes('items-center gap-4 w-full justify-between'):
             with ui.row().classes('items-center gap-4'):
                 ui.label('Markdown').classes('text-gray-500')
