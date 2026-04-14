@@ -443,7 +443,7 @@ def index():
 
     # Status bar — plain div so it sits in the flex column (not fixed-position
     # like Quasar's q-footer, which would overlap the editor bottom).
-    with ui.element('div').classes('bg-gray-800 text-gray-400 px-4 py-1 text-xs flex-shrink-0'):
+    with ui.element('div').classes('bg-gray-800 text-gray-400 px-4 py-1 text-xs flex-shrink-0 flex w-full items-center'):
         with ui.row().classes('items-center gap-4 w-full justify-between'):
             with ui.row().classes('items-center gap-4'):
                 ui.label('Markdown').classes('text-gray-500')
