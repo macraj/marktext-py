@@ -9,6 +9,7 @@ from export.html_export import export_html
 
 
 _OL_START_RE = re.compile(r'<ol\s+start=(["\'])(\d+)\1')
+_CHECKBOX_RE = re.compile(r'<input[^>]*type=["\']checkbox["\'][^>]*>', re.IGNORECASE)
 
 
 def _fix_ol_start(html: str) -> str:
@@ -29,15 +30,19 @@ def _fix_ol_start(html: str) -> str:
     return _OL_START_RE.sub(repl, html)
 
 
+def _fix_checkboxes(html: str) -> str:
+    """Replace <input type="checkbox"> with unicode chars for weasyprint.
+
+    Weasyprint renders checkbox inputs as replaced elements that break inline
+    flow, putting the checkbox on its own line above the label text.
+    """
+    def repl(m: re.Match) -> str:
+        return '☑' if 'checked' in m.group(0).lower() else '☐'
+    return _CHECKBOX_RE.sub(repl, html)
+
+
 PDF_EXTRA_CSS = """
-@page {
-    size: A4;
-    margin: 2.5cm 2cm;
-}
-@media print {
-    pre { page-break-inside: avoid; }
-    h1, h2, h3 { page-break-after: avoid; }
-}
+body { font-size: 13px; }
 """
 
 
@@ -80,7 +85,12 @@ def export_pdf(
 
     Also writes to dest_path if provided. Returns raw PDF bytes.
     """
-    html_str = export_html(_fix_ol_start(markdown_html), title=title, dark=dark)
+    html_str = export_html(
+        _fix_checkboxes(_fix_ol_start(markdown_html)),
+        title=title,
+        dark=dark,
+        extra_css=PDF_EXTRA_CSS,
+    )
 
     if _needs_brew_env():
         payload = json.dumps({

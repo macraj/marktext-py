@@ -1,3 +1,19 @@
+## v0.4.0 (2026-04-14)
+
+### Bug Fixes
+
+- show filename in title bar after opening file via browser picker
+- use padding instead of margin on hr to prevent CSS margin collapsing
+- prevent margin collapsing on horizontal rules
+- increase vertical spacing around horizontal rules
+- increase horizontal padding in preview panel
+- graceful shutdown on Ctrl+C without traceback
+- live preview refresh and improve CSS layout for preview panel
+
+### Features
+
+- auto-open browser window on startup
+
 ## v0.3.0 (2026-04-10)
 
 ### Bug Fixes

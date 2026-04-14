@@ -89,13 +89,15 @@ def export_html(
     title: str = 'Document',
     dark: bool = False,
     dest_path: str | None = None,
+    extra_css: str = '',
 ) -> str:
     """Render markdown HTML into a full page and optionally write to disk.
 
     Returns the HTML string.
     """
     theme = DARK_THEME if dark else LIGHT_THEME
-    html = HTML_TEMPLATE.format(title=title, body=markdown_html, **theme)
+    combined_extra = theme['extra_css'] + extra_css
+    html = HTML_TEMPLATE.format(title=title, body=markdown_html, **{**theme, 'extra_css': combined_extra})
     if dest_path:
         Path(dest_path).write_text(html, encoding='utf-8')
     return html

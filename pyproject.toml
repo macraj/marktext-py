@@ -1,6 +1,6 @@
 [project]
 name = "marktext-py"
-version = "0.3.1"
+version = "0.4.0"
 description = "MarkText-inspired markdown editor built with NiceGUI"
 readme = "README.md"
 requires-python = ">=3.13"
