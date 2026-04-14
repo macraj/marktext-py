@@ -11,9 +11,6 @@ EDITOR_CSS = """
     font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
     line-height: 1.7;
 }
-.cm-content {
-    padding-bottom: 40vh;
-}
 </style>
 """
 
