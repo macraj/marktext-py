@@ -64,13 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
             window._cmView = el.cmView.view;
             clearInterval(poll);
             setupImagePaste();
-            // Scroll-past-end: add bottom padding so last lines can scroll
-            // into view. Must call requestMeasure() so CM recalculates layout.
-            const content = el.querySelector('.cm-content');
-            if (content) {
-                content.style.paddingBottom = '40vh';
-                window._cmView.requestMeasure();
-            }
         }
     }, 200);
 });
