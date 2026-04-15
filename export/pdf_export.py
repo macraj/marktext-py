@@ -11,6 +11,13 @@ from export.html_export import export_html
 _OL_START_RE = re.compile(r'<ol\s+start=(["\'])(\d+)\1')
 _CHECKBOX_RE = re.compile(r'<input[^>]*type=["\']checkbox["\'][^>]*>', re.IGNORECASE)
 
+# Margin profiles: (top/bottom, left/right) in cm
+MARGIN_PROFILES = {
+    'compact':  (0.8, 1.0),
+    'normal':   (1.5, 1.5),
+    'spacious': (2.0, 2.0),
+}
+
 
 def _fix_ol_start(html: str) -> str:
     """Inject counter-reset so weasyprint honours <ol start="N">.
@@ -41,8 +48,48 @@ def _fix_checkboxes(html: str) -> str:
     return _CHECKBOX_RE.sub(repl, html)
 
 
+def _detect_margin_profile(html: str) -> str:
+    """Choose a margin profile based on content analysis.
+
+    Returns 'compact', 'normal', or 'spacious'.
+    """
+    has_tables = bool(re.search(r'<table[\s>]', html, re.IGNORECASE))
+    has_wide_code = bool(re.search(r'<pre[\s>]', html, re.IGNORECASE))
+
+    text_only = re.sub(r'<[^>]+>', '', html)
+    text_len = len(text_only.strip())
+
+    # Count block-level elements to estimate document complexity
+    headings = len(re.findall(r'<h[1-6][\s>]', html, re.IGNORECASE))
+    paragraphs = len(re.findall(r'<p[\s>]', html, re.IGNORECASE))
+    code_blocks = len(re.findall(r'<pre[\s>]', html, re.IGNORECASE))
+    tables = len(re.findall(r'<table[\s>]', html, re.IGNORECASE))
+
+    # Wide elements (tables, code blocks) benefit from compact margins
+    wide_elements = code_blocks + tables
+    if wide_elements >= 3 or (has_tables and has_wide_code):
+        return 'compact'
+
+    # Short documents (< ~1 page of text) use compact margins
+    if text_len < 1500 and headings <= 3:
+        return 'compact'
+
+    # Long, text-heavy documents with many sections use spacious for readability
+    if text_len > 8000 and headings >= 6 and paragraphs >= 15 and wide_elements == 0:
+        return 'spacious'
+
+    return 'normal'
+
+
+def _build_page_css(page_size: str, margin_profile: str) -> str:
+    """Build @page CSS rule for the given profile."""
+    tb, lr = MARGIN_PROFILES[margin_profile]
+    return f'@page {{ size: {page_size}; margin: {tb}cm {lr}cm; }}'
+
+
 PDF_EXTRA_CSS = """
-body { font-size: 13px; }
+body { font-size: 13px; max-width: none; margin: 0; padding: 0; }
+pre { white-space: pre-wrap; word-wrap: break-word; }
 """
 
 
@@ -62,7 +109,7 @@ from pathlib import Path
 from weasyprint import HTML, CSS
 
 args = json.loads(sys.stdin.read())
-page_css = f'@page {{ size: {args["page_size"]}; margin: 2.5cm 2cm; }}'
+page_css = args["page_css"]
 pdf_bytes = HTML(string=args["html"]).write_pdf(
     stylesheets=[CSS(string=page_css)]
 )
@@ -85,6 +132,9 @@ def export_pdf(
 
     Also writes to dest_path if provided. Returns raw PDF bytes.
     """
+    margin_profile = _detect_margin_profile(markdown_html)
+    page_css = _build_page_css(page_size, margin_profile)
+
     html_str = export_html(
         _fix_checkboxes(_fix_ol_start(markdown_html)),
         title=title,
@@ -95,6 +145,7 @@ def export_pdf(
     if _needs_brew_env():
         payload = json.dumps({
             'html': html_str,
+            'page_css': page_css,
             'page_size': page_size,
             'dest_path': dest_path,
         })
@@ -109,7 +160,6 @@ def export_pdf(
         pdf_bytes = Path(dest_path).read_bytes() if dest_path else result.stdout
     else:
         from weasyprint import HTML, CSS
-        page_css = f'@page {{ size: {page_size}; margin: 2.5cm 2cm; }}'
         pdf_bytes = HTML(string=html_str).write_pdf(
             stylesheets=[CSS(string=page_css)]
         )
