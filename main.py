@@ -225,15 +225,15 @@ def index():
 
             if state['path']:
                 _export_folder = str(Path(state['path']).resolve().parent)
+                _basename = Path(state['path']).stem + '.pdf'
             else:
-                _export_folder = str(Path.home() / 'Documents')
-            _export_base = propose_filename(
-                state['content'], folder=_export_folder,
-            ).removesuffix('.md')
+                _export_folder = load_last_folder()
+                _basename = Path(propose_filename(
+                    state['content'], folder=_export_folder,
+                )).stem + '.pdf'
 
             # --- folder selector (server-side listing) ---
             _folder_ref = {'value': _export_folder}
-            _basename = os.path.basename(_export_base) + '.pdf'
 
             folder_label = ui.label(_export_folder).classes(
                 'text-xs text-gray-400 truncate w-full')
@@ -332,6 +332,7 @@ def index():
                                 dark=dark_toggle.value,
                                 dest_path=dest,
                             )
+                        save_last_folder(dest)
                         dlg.close()
                         ui.notify(f'Exported to {dest}', color='positive')
                     except Exception as exc:
