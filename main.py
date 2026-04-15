@@ -223,8 +223,12 @@ def index():
 
             dark_toggle = ui.checkbox('Dark theme', value=False)
 
+            if state['path']:
+                _export_folder = str(Path(state['path']).resolve().parent)
+            else:
+                _export_folder = str(Path.home() / 'Documents')
             _export_base = propose_filename(
-                state['content']
+                state['content'], folder=_export_folder,
             ).removesuffix('.md')
             path_input = ui.input(
                 label='Save to path',

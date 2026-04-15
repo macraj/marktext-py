@@ -30,7 +30,7 @@ def load_last_folder() -> str:
 
 
 def save_last_folder(path: str) -> None:
-    _save_prefs({'last_folder': str(Path(path).parent)})
+    _save_prefs({'last_folder': str(Path(path).resolve().parent)})
 
 
 def propose_filename(content: str, folder: str | None = None) -> str:
