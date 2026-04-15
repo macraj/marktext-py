@@ -230,10 +230,74 @@ def index():
             _export_base = propose_filename(
                 state['content'], folder=_export_folder,
             ).removesuffix('.md')
-            path_input = ui.input(
-                label='Save to path',
-                value=_export_base + '.pdf',
-            ).classes('w-full')
+
+            # --- folder selector (server-side listing) ---
+            _folder_ref = {'value': _export_folder}
+            _basename = os.path.basename(_export_base) + '.pdf'
+
+            folder_label = ui.label(_export_folder).classes(
+                'text-xs text-gray-400 truncate w-full')
+
+            def _pick_folder():
+                with ui.dialog() as fdlg, ui.card().classes('w-[500px]'):
+                    ui.label('Choose folder').classes('text-lg font-semibold mb-2')
+                    cur = {'dir': _folder_ref['value']}
+                    dir_input = ui.input(label='Path', value=cur['dir']).classes('w-full')
+                    file_list = ui.column().classes('w-full max-h-64 overflow-y-auto gap-0')
+
+                    def _render_dir(d: str):
+                        cur['dir'] = d
+                        dir_input.value = d
+                        file_list.clear()
+                        with file_list:
+                            parent = os.path.dirname(d)
+                            if parent != d:
+                                ui.button('📁 ..', on_click=lambda p=parent: _render_dir(p)).props(
+                                    'flat dense no-caps align=left').classes('w-full')
+                            try:
+                                entries = sorted(os.listdir(d))
+                            except PermissionError:
+                                ui.label('⛔ Permission denied').classes('text-red-400')
+                                return
+                            for name in entries:
+                                if name.startswith('.'):
+                                    continue
+                                full = os.path.join(d, name)
+                                if os.path.isdir(full):
+                                    ui.button(
+                                        f'📁 {name}',
+                                        on_click=lambda f=full: _render_dir(f),
+                                    ).props('flat dense no-caps align=left').classes('w-full')
+
+                    _render_dir(cur['dir'])
+
+                    def _go_to_input():
+                        p = os.path.expanduser(dir_input.value.strip())
+                        if os.path.isdir(p):
+                            _render_dir(p)
+                        else:
+                            ui.notify('Not a directory', color='negative')
+
+                    dir_input.on('keydown.enter', _go_to_input)
+
+                    with ui.row().classes('justify-end gap-2 mt-2 w-full'):
+                        ui.button('Cancel', on_click=fdlg.close).props('flat')
+                        def _select():
+                            chosen = cur['dir']
+                            _folder_ref['value'] = chosen
+                            folder_label.text = chosen
+                            path_input.value = os.path.join(chosen, os.path.basename(path_input.value))
+                            fdlg.close()
+                        ui.button('Select', on_click=_select).props('color=primary')
+                fdlg.open()
+
+            with ui.row().classes('w-full items-end gap-2'):
+                path_input = ui.input(
+                    label='Filename',
+                    value=os.path.join(_export_folder, _basename),
+                ).classes('flex-grow')
+                ui.button(icon='folder_open', on_click=_pick_folder).props(
+                    'flat dense').classes('mb-1')
 
             def _update_ext():
                 p = path_input.value
