@@ -1,3 +1,25 @@
+## v0.5.3 (2026-04-15)
+
+## v0.5.2 (2026-04-15)
+
+### Bug Fixes
+
+- resolve export path from current file, fallback to ~/Documents
+- find EditorView via .cm-content.cmView.view
+- get CodeMirror view from NiceGUI component instead of DOM property
+- increase splitter bottom margin to 40px for taller footer
+- revert to original padding and add margin-bottom on splitter
+- restore ui.footer() and preserve Quasar vertical padding
+- restore status bar visibility after footer refactor
+- replace q-footer with plain div to stop it overlapping editor
+- scroll past end via JS requestMeasure instead of CSS
+- allow scrolling past last line in editor
+
+### Features
+
+- add folder picker to PDF/HTML export dialog
+- smart PDF margins based on content analysis
+
 ## v0.4.0 (2026-04-14)
 
 ### Bug Fixes
