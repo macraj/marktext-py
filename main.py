@@ -222,6 +222,7 @@ def index():
             ).classes('w-full')
 
             dark_toggle = ui.checkbox('Dark theme', value=False)
+            page_numbers_toggle = ui.checkbox('Page numbers — "Page X of Y — filename" (PDF only)', value=False)
 
             if state['path']:
                 _export_folder = str(Path(state['path']).resolve().parent)
@@ -318,12 +319,15 @@ def index():
                     title = (state['path'] or 'Document').split('/')[-1]
                     try:
                         if fmt.value == 'PDF':
+                            short_name = Path(state['path']).name if state['path'] else title
                             export_pdf(
                                 rendered_html,
                                 title=title,
                                 dark=dark_toggle.value,
                                 page_size=page_size.value,
                                 dest_path=dest,
+                                page_numbers=page_numbers_toggle.value,
+                                doc_title=short_name,
                             )
                         else:
                             export_html(

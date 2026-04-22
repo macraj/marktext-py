@@ -81,10 +81,29 @@ def _detect_margin_profile(html: str) -> str:
     return 'normal'
 
 
-def _build_page_css(page_size: str, margin_profile: str) -> str:
+def _build_page_css(
+    page_size: str,
+    margin_profile: str,
+    page_numbers: bool = False,
+    doc_title: str = '',
+) -> str:
     """Build @page CSS rule for the given profile."""
     tb, lr = MARGIN_PROFILES[margin_profile]
-    return f'@page {{ size: {page_size}; margin: {tb}cm {lr}cm; }}'
+    if not page_numbers:
+        return f'@page {{ size: {page_size}; margin: {tb}cm {lr}cm; }}'
+
+    safe_title = doc_title.replace('"', '\\"')
+    label = '"Page " counter(page) " of " counter(pages)'
+    if safe_title:
+        label += f' " \u2014 {safe_title}"'
+    footer_css = (
+        f'@bottom-center {{'
+        f' content: {label};'
+        f' font-size: 9px;'
+        f' color: #888;'
+        f'}}'
+    )
+    return f'@page {{ size: {page_size}; margin: {tb}cm {lr}cm; {footer_css} }}'
 
 
 PDF_EXTRA_CSS = """
@@ -127,13 +146,15 @@ def export_pdf(
     dark: bool = False,
     page_size: str = 'A4',
     dest_path: str | None = None,
+    page_numbers: bool = False,
+    doc_title: str = '',
 ) -> bytes:
     """Render markdown HTML to PDF bytes via weasyprint.
 
     Also writes to dest_path if provided. Returns raw PDF bytes.
     """
     margin_profile = _detect_margin_profile(markdown_html)
-    page_css = _build_page_css(page_size, margin_profile)
+    page_css = _build_page_css(page_size, margin_profile, page_numbers=page_numbers, doc_title=doc_title)
 
     html_str = export_html(
         _fix_checkboxes(_fix_ol_start(markdown_html)),
