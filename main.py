@@ -20,6 +20,11 @@ async def _api_open_file(request: Request):
     return {'ok': True}
 
 app.add_static_files('/static', str(Path(__file__).parent / 'static'))
+
+_STATIC = Path(__file__).parent / 'static'
+app.add_static_file(local_file=str(_STATIC / 'apple-touch-icon.png'), url_path='/apple-touch-icon.png')
+app.add_static_file(local_file=str(_STATIC / 'apple-touch-icon-precomposed.png'), url_path='/apple-touch-icon-precomposed.png')
+app.add_static_file(local_file=str(_STATIC / 'favicon.png'), url_path='/favicon.ico')
 from editor.markdown_editor import MarkdownEditor, INITIAL_CONTENT
 from editor.preview import Preview
 from editor.toolbar import Toolbar
@@ -443,6 +448,11 @@ def index():
     ui.add_head_html(f'<style id="app-theme">{load_theme_css(state["theme"])}</style>')
     # KaTeX for math rendering
     ui.add_head_html(KATEX_HEAD)
+    ui.add_head_html(
+        '<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">'
+        '<link rel="icon" type="image/png" sizes="192x192" href="/static/icon-192.png">'
+        '<link rel="icon" type="image/png" sizes="32x32" href="/static/favicon.png">'
+    )
 
     # Load custom JS (cursor-aware CodeMirror helpers)
     ui.add_body_html('<script src="/static/custom.js"></script>')
