@@ -3,21 +3,6 @@ import sys
 import signal
 from pathlib import Path
 from nicegui import app, ui
-from fastapi import Request
-
-# Module-level store for files picked via JS native file picker.
-# Keyed by session_key (str(id(state)) per page load).
-_pending_files: dict[str, dict] = {}
-
-
-@app.post('/api/open-file')
-async def _api_open_file(request: Request):
-    data = await request.json()
-    _pending_files[data['session_key']] = {
-        'name': data['name'],
-        'content': data['content'],
-    }
-    return {'ok': True}
 
 app.add_static_files('/static', str(Path(__file__).parent / 'static'))
 
@@ -29,7 +14,7 @@ from editor.markdown_editor import MarkdownEditor, INITIAL_CONTENT
 from editor.preview import Preview
 from editor.toolbar import Toolbar
 from file_manager.file_ops import (
-    load_recent, read_file, write_file,
+    load_recent, read_file, write_file, save_recent,
     propose_filename, save_last_folder, load_last_folder,
 )
 from editor.preview import render as render_md, KATEX_HEAD
@@ -92,77 +77,95 @@ def index():
         else:
             _load_content(INITIAL_CONTENT)
 
-    # Unique key for this page session — used to route JS file picks back here.
-    session_key = str(id(state))
-    # Holds open dialog ref so the pending-file timer can close it.
-    open_dialog_ref: list = []
-
     def action_open() -> None:
-        """Open via native OS file picker (JS) or manual path input."""
-        with ui.dialog() as dlg, ui.card().classes('w-96'):
-            open_dialog_ref.clear()
-            open_dialog_ref.append(dlg)
-
+        """Open via server-side file browser — gives us a real, writable path."""
+        with ui.dialog() as dlg, ui.card().classes('w-[560px]'):
             ui.label('Open File').classes('text-lg font-semibold mb-2')
 
-            # HTML label+input — label click triggers file picker (direct user
-            # gesture, no Python round-trip).  Vue's v-html strips inline
-            # handlers, so we attach onchange via ui.run_javascript below.
-            input_id = f'file-open-{session_key}'
-            ui.html(f'''
-<label style="display:flex;align-items:center;gap:8px;cursor:pointer;
-              padding:8px 16px;border-radius:4px;background:#1976d2;
-              color:white;font-size:14px;width:100%;box-sizing:border-box;justify-content:center;">
-  <span class="material-icons" style="font-size:18px">folder_open</span>
-  Browse files…
-  <input type="file" id="{input_id}" accept=".md,.txt,.markdown" style="display:none">
-</label>''')
-            # Attach the change handler via JS (v-html strips inline handlers).
-            ui.run_javascript(f'''
-                const el = document.getElementById({input_id!r});
-                if (el) el.onchange = async function(e) {{
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    const text = await file.text();
-                    await fetch('/api/open-file', {{
-                        method: 'POST',
-                        headers: {{'Content-Type': 'application/json'}},
-                        body: JSON.stringify({{
-                            session_key: {session_key!r},
-                            name: file.name,
-                            content: text
-                        }})
-                    }});
-                }};
-            ''')
+            start_dir = load_last_folder()
+            if state['path'] and os.path.isabs(state['path']):
+                parent = str(Path(state['path']).resolve().parent)
+                if os.path.isdir(parent):
+                    start_dir = parent
+            cur = {'dir': start_dir, 'file': None}
 
-            ui.label('— or type the full path —').classes(
-                'text-xs text-gray-500 my-2 text-center w-full')
+            dir_input = ui.input(label='Folder', value=cur['dir']).classes('w-full')
+            file_list = ui.column().classes('w-full max-h-80 overflow-y-auto gap-0 border rounded')
+            selected_lbl = ui.label('').classes('text-xs text-gray-400 truncate w-full mt-1')
 
-            path_input = ui.input(
-                label='File path',
-                placeholder='/Users/you/notes.md',
-            ).classes('w-full')
-
-            def _close():
-                open_dialog_ref.clear()
-                dlg.close()
-
-            with ui.row().classes('justify-end gap-2 mt-4'):
-                ui.button('Cancel', on_click=_close).props('flat')
-
-                def do_open_path():
-                    p = os.path.expanduser(path_input.value.strip())
+            def _render_dir(d: str):
+                cur['dir'] = d
+                cur['file'] = None
+                selected_lbl.text = ''
+                dir_input.value = d
+                file_list.clear()
+                with file_list:
+                    parent = os.path.dirname(d)
+                    if parent and parent != d:
+                        ui.button('📁 ..', on_click=lambda p=parent: _render_dir(p)).props(
+                            'flat dense no-caps align=left').classes('w-full')
                     try:
-                        content = read_file(p)
-                        _load_content(content, path=p)
-                        save_last_folder(p)
-                        _close()
-                        ui.notify(f'Opened: {p.split("/")[-1]}', color='positive')
-                    except Exception as exc:
-                        ui.notify(f'Could not open: {exc}', color='negative')
+                        entries = sorted(os.listdir(d), key=str.lower)
+                    except (PermissionError, FileNotFoundError) as e:
+                        ui.label(f'⛔ {e}').classes('text-red-400')
+                        return
+                    # Directories first
+                    for name in entries:
+                        if name.startswith('.'):
+                            continue
+                        full = os.path.join(d, name)
+                        if os.path.isdir(full):
+                            ui.button(
+                                f'📁 {name}',
+                                on_click=lambda f=full: _render_dir(f),
+                            ).props('flat dense no-caps align=left').classes('w-full')
+                    # Then markdown/text files
+                    for name in entries:
+                        if name.startswith('.'):
+                            continue
+                        full = os.path.join(d, name)
+                        if os.path.isfile(full) and name.lower().endswith(('.md', '.markdown', '.txt')):
+                            def _pick(f=full, n=name):
+                                cur['file'] = f
+                                selected_lbl.text = f
+                            ui.button(
+                                f'📄 {name}',
+                                on_click=_pick,
+                            ).props('flat dense no-caps align=left').classes('w-full')
 
-                ui.button('Open path', on_click=do_open_path).props('flat')
+            _render_dir(cur['dir'])
+
+            def _go_to_input():
+                p = os.path.expanduser(dir_input.value.strip())
+                if os.path.isfile(p):
+                    _open_path(p)
+                elif os.path.isdir(p):
+                    _render_dir(p)
+                else:
+                    ui.notify('Not a file or directory', color='negative')
+
+            dir_input.on('keydown.enter', _go_to_input)
+
+            def _open_path(p: str):
+                try:
+                    content = read_file(p)
+                    _load_content(content, path=p)
+                    save_last_folder(p)
+                    save_recent(p)
+                    _rebuild_recent_menu()
+                    dlg.close()
+                    ui.notify(f'Opened: {Path(p).name}', color='positive')
+                except Exception as exc:
+                    ui.notify(f'Could not open: {exc}', color='negative')
+
+            with ui.row().classes('justify-end gap-2 mt-3 w-full'):
+                ui.button('Cancel', on_click=dlg.close).props('flat')
+                def _do_open():
+                    if not cur['file']:
+                        ui.notify('Select a file first', color='warning')
+                        return
+                    _open_path(cur['file'])
+                ui.button('Open', on_click=_do_open).props('color=primary')
 
         dlg.open()
 
@@ -557,18 +560,6 @@ def index():
             _update_counts(current)
 
     ui.timer(0.3, _sync_preview)
-
-    # Poll for files picked via native JS file picker
-    def _check_pending_file():
-        if session_key in _pending_files:
-            file_data = _pending_files.pop(session_key)
-            if open_dialog_ref:
-                open_dialog_ref[0].close()
-                open_dialog_ref.clear()
-            _load_content(file_data['content'], path=file_data['name'])
-            ui.notify(f'Opened: {file_data["name"]}', color='positive')
-
-    ui.timer(0.3, _check_pending_file)
 
     # Initial render
     preview.update(INITIAL_CONTENT)
