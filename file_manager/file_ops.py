@@ -82,6 +82,9 @@ def save_recent(path: str) -> None:
 
 
 def read_file(path: str) -> str:
+    if path.lower().endswith('.eml'):
+        from .eml_parser import eml_to_markdown
+        return eml_to_markdown(path)
     return Path(path).read_text(encoding='utf-8')
 
 

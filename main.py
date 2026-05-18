@@ -124,7 +124,7 @@ def index():
                         if name.startswith('.'):
                             continue
                         full = os.path.join(d, name)
-                        if os.path.isfile(full) and name.lower().endswith(('.md', '.markdown', '.txt')):
+                        if os.path.isfile(full) and name.lower().endswith(('.md', '.markdown', '.txt', '.eml')):
                             def _pick(f=full, n=name):
                                 cur['file'] = f
                                 selected_lbl.text = f
@@ -149,7 +149,9 @@ def index():
             def _open_path(p: str):
                 try:
                     content = read_file(p)
-                    _load_content(content, path=p)
+                    # .eml is imported as markdown — don't bind path (Save would overwrite the source)
+                    bound = None if p.lower().endswith('.eml') else p
+                    _load_content(content, path=bound)
                     save_last_folder(p)
                     save_recent(p)
                     _rebuild_recent_menu()
@@ -206,7 +208,8 @@ def index():
     def action_open_recent(path: str) -> None:
         try:
             content = read_file(path)
-            _load_content(content, path)
+            bound = None if path.lower().endswith('.eml') else path
+            _load_content(content, bound)
             save_last_folder(path)
             ui.notify(f'Opened: {path.split("/")[-1]}', color='positive')
         except Exception as exc:
