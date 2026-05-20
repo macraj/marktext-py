@@ -86,9 +86,12 @@ def _build_page_css(
     margin_profile: str,
     page_numbers: bool = False,
     doc_title: str = '',
+    tb_override: float | None = None,
 ) -> str:
     """Build @page CSS rule for the given profile."""
     tb, lr = MARGIN_PROFILES[margin_profile]
+    if tb_override is not None:
+        tb = tb_override
     if not page_numbers:
         return f'@page {{ size: {page_size}; margin: {tb}cm {lr}cm; }}'
 
@@ -148,13 +151,20 @@ def export_pdf(
     dest_path: str | None = None,
     page_numbers: bool = False,
     doc_title: str = '',
+    vertical_margin_cm: float | None = None,
 ) -> bytes:
     """Render markdown HTML to PDF bytes via weasyprint.
 
     Also writes to dest_path if provided. Returns raw PDF bytes.
+    `vertical_margin_cm` overrides the top/bottom margin in centimeters
+    (None = auto-detect from content).
     """
     margin_profile = _detect_margin_profile(markdown_html)
-    page_css = _build_page_css(page_size, margin_profile, page_numbers=page_numbers, doc_title=doc_title)
+    page_css = _build_page_css(
+        page_size, margin_profile,
+        page_numbers=page_numbers, doc_title=doc_title,
+        tb_override=vertical_margin_cm,
+    )
 
     html_str = export_html(
         _fix_checkboxes(_fix_ol_start(markdown_html)),

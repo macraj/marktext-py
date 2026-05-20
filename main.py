@@ -232,6 +232,13 @@ def index():
                 label='Page size (PDF only)',
             ).classes('w-full')
 
+            vmargin = ui.select(
+                {None: 'Auto', 0.5: '0.5 cm', 0.8: '0.8 cm', 1.0: '1.0 cm',
+                 1.5: '1.5 cm', 2.0: '2.0 cm', 2.5: '2.5 cm'},
+                value=None,
+                label='Top/bottom margin (PDF only)',
+            ).classes('w-full')
+
             dark_toggle = ui.checkbox('Dark theme', value=False)
             page_numbers_toggle = ui.checkbox('Page numbers — "Page X of Y — filename" (PDF only)', value=False)
 
@@ -339,6 +346,7 @@ def index():
                                 dest_path=dest,
                                 page_numbers=page_numbers_toggle.value,
                                 doc_title=short_name,
+                                vertical_margin_cm=vmargin.value,
                             )
                         else:
                             export_html(
