@@ -28,7 +28,7 @@ Ask before deleting any of them.
 
 ## This Session (2026-08-04) — two user-reported bugs, both fixed
 
-Committed as `9ca8db1` (v0.6.2) and `<docs commit>`; pushed to `origin/master`.
+Committed as `9ca8db1` (v0.6.2, the fixes) and `e6de4ca` (docs); pushed to `origin/master`.
 
 ### Bug 1: blank lines added for signature space vanished from exported PDF
 **Root cause — not in the exporter.** CommonMark collapses any run of blank lines into a
