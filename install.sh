@@ -12,7 +12,10 @@ fi
 echo "uv: $(uv --version)"
 
 # --- Python deps ---
-echo "Installing Python dependencies..."
+# Keep the venv out of ~/Documents (iCloud Drive) — iCloud evicts venv files
+# to cloud-only placeholders, which makes imports hang forever reading them.
+export UV_PROJECT_ENVIRONMENT="$HOME/.venvs/marktext-py"
+echo "Installing Python dependencies to $UV_PROJECT_ENVIRONMENT..."
 uv sync
 
 # --- System libs for weasyprint (PDF export) ---

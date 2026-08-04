@@ -9,10 +9,12 @@ Runs as a local web app in your browser — no Electron, no heavy dependencies.
 - **Live preview** — split-pane editor with real-time Markdown rendering
 - **Multiple edit modes** — Split, Source-only, Typewriter (centered cursor), Focus (dim inactive paragraphs)
 - **6 themes** — Dark, One Dark, Material Dark, Cadmium Light, Graphite Light, Ulysses Light
-- **Export** — PDF and HTML export with page size and dark/light options
+- **Export** — PDF and HTML export with page size, dark/light, page numbers, and adjustable top/bottom margins
+- **E-mail import** — open a `.eml` file and edit it as Markdown (subject becomes the heading, headers become a meta block)
 - **File management** — New, Open (native file picker or path input), Save, Save As, Recent files
 - **Toolbar & shortcuts** — Bold, Italic, Headings, Lists, Code, Links, Tables, and more
 - **Math & Emoji** — KaTeX math rendering and emoji support
+- **Blank lines are preserved** — consecutive blank lines become real vertical space in the preview and in exported PDF/HTML, so you can leave room for a signature (standard Markdown collapses them)
 - **Word & character count** in status bar
 
 ## Requirements
@@ -52,6 +54,9 @@ If you prefer to set things up yourself:
 # Install uv (if not already installed)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
+# Choose where the virtualenv lives (see note below)
+export UV_PROJECT_ENVIRONMENT="$HOME/.venvs/marktext-py"
+
 # Install Python dependencies
 uv sync
 
@@ -61,6 +66,14 @@ brew install pango
 # Run
 uv run python main.py
 ```
+
+> **Keep the virtualenv outside cloud-synced folders.** By default `uv` creates
+> `.venv` inside the project. If the project lives in an iCloud Drive, Dropbox, or
+> OneDrive folder, the sync client can evict the venv's many small files to
+> cloud-only placeholders — the app then hangs on startup with no output while a
+> package import silently waits on a download that never finishes. `install.sh`
+> and `run.sh` avoid this by setting `UV_PROJECT_ENVIRONMENT` to `~/.venvs/marktext-py`.
+> Set it yourself if you invoke `uv` directly.
 
 ## Keyboard shortcuts
 
@@ -85,7 +98,8 @@ marktext-py/
 │   ├── pdf_export.py        # PDF export via WeasyPrint
 │   └── html_export.py       # HTML export
 ├── file_manager/
-│   └── file_ops.py          # File I/O, recent files, path utilities
+│   ├── file_ops.py          # File I/O, recent files, path utilities
+│   └── eml_parser.py        # .eml e-mail → Markdown conversion
 ├── themes/
 │   ├── theme_manager.py     # Theme loading and persistence
 │   └── css/                 # Theme stylesheets (6 themes)
