@@ -1,3 +1,18 @@
+## v0.6.2 (2026-08-04)
+
+### Bug Fixes
+
+- preserve blank lines in export and stop footer covering last preview line
+- replace browser file picker with server-side browser to preserve full paths
+- use loaded filename and remembered folder in export dialog
+
+### Features
+
+- adjustable top/bottom margin in PDF export
+- open and export .eml files as markdown
+- add app icon (favicon + apple-touch-icon)
+- add page numbers toggle to PDF export dialog
+
 ## v0.5.4 (2026-04-15)
 
 ## v0.5.3 (2026-04-15)
