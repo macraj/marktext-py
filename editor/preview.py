@@ -54,6 +54,56 @@ def _restore_math(html: str, stash: list[str]) -> str:
     return _STASH_RE.sub(lambda m: stash[int(m.group(1))], html)
 
 
+_FENCE_RE = re.compile(r'^\s{0,3}(`{3,}|~{3,})')
+
+
+def _expand_blank_lines(text: str) -> str:
+    """Turn runs of 2+ blank lines into explicit vertical spacers.
+
+    CommonMark treats any run of blank lines as a single block separator, so
+    padding a document with empty lines (e.g. to leave room for a signature)
+    has no effect on the preview or the exported PDF. One blank line keeps its
+    normal paragraph-break meaning; every blank line beyond that becomes 1em of
+    vertical space. Blank lines inside fenced code blocks are left untouched.
+    """
+    out: list[str] = []
+    blanks = 0
+    fence: str | None = None
+
+    def flush() -> None:
+        nonlocal blanks
+        if blanks >= 2:
+            # blank line surrounding is required for markdown-it to treat this
+            # as an HTML block rather than inline text
+            out.extend(('', f'<div class="md-spacer" style="height:{blanks - 1}em"></div>', ''))
+        elif blanks == 1:
+            out.append('')
+        blanks = 0
+
+    for line in text.split('\n'):
+        if fence is not None:
+            out.append(line)
+            if line.strip().startswith(fence):
+                fence = None
+            continue
+
+        opening = _FENCE_RE.match(line)
+        if opening:
+            flush()
+            fence = opening.group(1)[0] * 3
+            out.append(line)
+            continue
+
+        if line.strip() == '':
+            blanks += 1
+        else:
+            flush()
+            out.append(line)
+
+    flush()  # trailing blank lines are meaningful too — space at the end
+    return '\n'.join(out)
+
+
 def _highlight_code(code: str, lang: str, attrs: str) -> str:
     try:
         from pygments import highlight
@@ -86,8 +136,10 @@ md = _md_builder
 
 
 def render(text: str) -> str:
-    """Full pipeline: math protection → emoji → markdown → restore math."""
+    """Full pipeline: math protection → blank lines → emoji → markdown → restore math."""
     text, stash = _protect_math(text)
+    # after math protection, so blank lines inside $$...$$ blocks are not split
+    text = _expand_blank_lines(text)
     text = _replace_emoji(text)
     html = md.render(text)
     html = _restore_math(html, stash)

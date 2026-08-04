@@ -454,7 +454,12 @@ def index():
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
         .nicegui-content { height: 100vh; display: flex; flex-direction: column; padding: 0 !important; }
-        .q-splitter { flex: 1; overflow: hidden; margin-bottom: 40px; }
+        /* .nicegui-content is 100vh but sits *below* the 35px header, so it
+           overflows the viewport bottom by exactly the header height. The
+           margin below must therefore clear header overflow (35px) AND the
+           footer (32px) = 67px, or the footer covers the last preview line.
+           Bump this if the header or footer height ever changes. */
+        .q-splitter { flex: 1; overflow: hidden; margin-bottom: 67px; }
         .q-splitter__panel { overflow: auto; }
     </style>
     """)
